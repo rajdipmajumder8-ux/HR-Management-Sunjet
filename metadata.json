@@ -1,0 +1,6 @@
+{
+  "name": "HR Management System",
+  "description": "A modern full-stack HR management system for employee profiles, KYC document verification, leave requests, and company holidays with role-based access control.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

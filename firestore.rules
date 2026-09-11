@@ -1,0 +1,88 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isHRAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.role == 'hr_admin' ||
+        (exists(/databases/$(database)/documents/employees/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.role == 'hr_admin')
+      );
+    }
+
+    function isEmployee(employeeUid) {
+      return isAuthenticated() && request.auth.uid == employeeUid;
+    }
+
+    // Employees Collection
+    match /employees/{employeeUid} {
+      allow read: if isEmployee(employeeUid) || isHRAdmin();
+      
+      allow create: if (isAuthenticated() && request.auth.uid == employeeUid) || isHRAdmin();
+      
+      allow update: if isHRAdmin() || (
+        isEmployee(employeeUid) &&
+        // Employees cannot modify role, ctc, position, department, employeeId, or self-verify KYC
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'ctc', 'position', 'department', 'employeeId', 'kycStatus'])
+      );
+      
+      allow delete: if isHRAdmin();
+    }
+
+    // KYC Documents Collection
+    match /kyc_documents/{docId} {
+      allow read: if isAuthenticated() && (
+        resource.data.employeeUid == request.auth.uid || isHRAdmin()
+      );
+      
+      allow create: if isAuthenticated() && 
+        request.resource.data.employeeUid == request.auth.uid &&
+        request.resource.data.status == 'pending';
+        
+      allow update: if isHRAdmin();
+      
+      allow delete: if isHRAdmin() || (
+        isAuthenticated() && 
+        resource.data.employeeUid == request.auth.uid && 
+        resource.data.status == 'pending'
+      );
+    }
+
+    // Leave Balances Collection
+    match /leave_balances/{employeeUid} {
+      allow read: if isEmployee(employeeUid) || isHRAdmin();
+      allow create: if isEmployee(employeeUid) || isHRAdmin();
+      allow update: if isHRAdmin();
+      allow delete: if isHRAdmin();
+    }
+
+    // Leave Requests Collection
+    match /leave_requests/{requestId} {
+      allow read: if isAuthenticated() && (
+        resource.data.employeeUid == request.auth.uid || isHRAdmin()
+      );
+      
+      allow create: if isAuthenticated() &&
+        request.resource.data.employeeUid == request.auth.uid &&
+        request.resource.data.status == 'pending';
+        
+      allow update: if isHRAdmin();
+      
+      allow delete: if isHRAdmin() || (
+        isAuthenticated() && 
+        resource.data.employeeUid == request.auth.uid && 
+        resource.data.status == 'pending'
+      );
+    }
+
+    // Holidays Collection
+    match /holidays/{holidayId} {
+      allow read: if isAuthenticated();
+      allow write: if isHRAdmin();
+    }
+  }
+}

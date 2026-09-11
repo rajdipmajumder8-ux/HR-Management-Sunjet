@@ -1,0 +1,138 @@
+{
+  "entities": {
+    "Employee": {
+      "title": "Employee",
+      "description": "Employee profile record including work and personal details",
+      "type": "object",
+      "properties": {
+        "employeeId": { "type": "string", "description": "Unique employee identification code" },
+        "fullName": { "type": "string", "description": "Full name of the employee" },
+        "email": { "type": "string", "format": "email", "description": "Work email address" },
+        "phone": { "type": "string", "description": "Contact phone number" },
+        "position": { "type": "string", "description": "Job designation" },
+        "ctc": { "type": "string", "description": "Cost to company / annual compensation" },
+        "joiningDate": { "type": "string", "description": "Date of joining in YYYY-MM-DD format" },
+        "department": { "type": "string", "description": "Department or team" },
+        "manager": { "type": "string", "description": "Reporting manager name" },
+        "kycStatus": {
+          "type": "string",
+          "enum": ["not_submitted", "pending", "verified", "rejected"],
+          "description": "Current KYC verification status"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["employee", "hr_admin"],
+          "description": "System access role"
+        },
+        "createdAt": { "type": "string", "description": "Creation timestamp" }
+      },
+      "required": ["employeeId", "fullName", "email", "position", "department", "role", "kycStatus"]
+    },
+    "KYCDocument": {
+      "title": "KYCDocument",
+      "description": "KYC identification document uploaded by an employee",
+      "type": "object",
+      "properties": {
+        "employeeUid": { "type": "string", "description": "Firebase Auth UID of the employee" },
+        "employeeId": { "type": "string", "description": "Employee ID code" },
+        "employeeName": { "type": "string", "description": "Full name of the employee" },
+        "documentType": {
+          "type": "string",
+          "enum": ["Aadhaar", "PAN", "Bank document", "Address proof", "Other"],
+          "description": "Type of identity or financial document"
+        },
+        "fileName": { "type": "string", "description": "Original file name" },
+        "fileUrl": { "type": "string", "description": "Storage download URL or data URI" },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "verified", "rejected"],
+          "description": "Verification status"
+        },
+        "rejectionReason": { "type": "string", "description": "Reason for rejection if applicable" },
+        "uploadedAt": { "type": "string", "description": "Upload ISO timestamp" }
+      },
+      "required": ["employeeUid", "employeeId", "documentType", "fileName", "status", "uploadedAt"]
+    },
+    "LeaveBalance": {
+      "title": "LeaveBalance",
+      "description": "Available and used leave balance for an employee",
+      "type": "object",
+      "properties": {
+        "employeeUid": { "type": "string", "description": "Firebase Auth UID of the employee" },
+        "employeeId": { "type": "string", "description": "Employee ID code" },
+        "casualLeave": { "type": "number", "description": "Total casual leave quota" },
+        "medicalLeave": { "type": "number", "description": "Total medical leave quota" },
+        "casualLeaveUsed": { "type": "number", "description": "Casual leaves consumed" },
+        "medicalLeaveUsed": { "type": "number", "description": "Medical leaves consumed" },
+        "year": { "type": "number", "description": "Calendar year" }
+      },
+      "required": ["employeeUid", "casualLeave", "medicalLeave", "casualLeaveUsed", "medicalLeaveUsed"]
+    },
+    "LeaveRequest": {
+      "title": "LeaveRequest",
+      "description": "Leave application submitted by an employee",
+      "type": "object",
+      "properties": {
+        "employeeUid": { "type": "string", "description": "Firebase Auth UID of the applicant" },
+        "employeeId": { "type": "string", "description": "Employee ID code" },
+        "employeeName": { "type": "string", "description": "Full name of the applicant" },
+        "leaveType": {
+          "type": "string",
+          "enum": ["casual", "medical"],
+          "description": "Type of leave requested"
+        },
+        "startDate": { "type": "string", "description": "Start date in YYYY-MM-DD format" },
+        "endDate": { "type": "string", "description": "End date in YYYY-MM-DD format" },
+        "daysCount": { "type": "number", "description": "Number of days requested" },
+        "reason": { "type": "string", "description": "Reason for taking leave" },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "rejected"],
+          "description": "Approval status"
+        },
+        "rejectionReason": { "type": "string", "description": "Reason for rejection if rejected" },
+        "submittedAt": { "type": "string", "description": "Submission ISO timestamp" }
+      },
+      "required": ["employeeUid", "employeeId", "leaveType", "startDate", "endDate", "daysCount", "status", "submittedAt"]
+    },
+    "Holiday": {
+      "title": "Holiday",
+      "description": "Official company holiday",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Holiday title" },
+        "date": { "type": "string", "description": "Holiday date in YYYY-MM-DD format" },
+        "dayOfWeek": { "type": "string", "description": "Day of the week" },
+        "type": {
+          "type": "string",
+          "enum": ["mandatory", "optional"],
+          "description": "Holiday classification"
+        },
+        "description": { "type": "string", "description": "Holiday description or notes" }
+      },
+      "required": ["title", "date", "type"]
+    }
+  },
+  "firestore": {
+    "/employees/{employeeUid}": {
+      "schema": "Employee",
+      "description": "Employee profile records keyed by employee Auth UID"
+    },
+    "/kyc_documents/{docId}": {
+      "schema": "KYCDocument",
+      "description": "Employee KYC identification documents"
+    },
+    "/leave_balances/{employeeUid}": {
+      "schema": "LeaveBalance",
+      "description": "Leave balance record per employee"
+    },
+    "/leave_requests/{requestId}": {
+      "schema": "LeaveRequest",
+      "description": "Submitted leave requests"
+    },
+    "/holidays/{holidayId}": {
+      "schema": "Holiday",
+      "description": "Company calendar holidays"
+    }
+  }
+}
